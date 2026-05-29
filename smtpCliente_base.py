@@ -54,12 +54,52 @@ if recv1[:3] != '250':
 # Pista: Sigan el gráfico del enunciado y presten atención a como se envia las lineas de header y el cuerpo del mail.
 
 ### 220 y HELO ya estan, voy por el resto
+### ────────────MAIL FROM───────────────────────────────
+mail_from_cmd = f'MAIL FROM:<{FROM_ADDR}>\r\n'  
+clientSocket.send(mail_from_cmd.encode())
+print('C:', mail_from_cmd, end='')
+recv2 = clientSocket.recv(1024).decode()
+print('S:', recv2, end='')
+if recv2[:3] != '250':
+    raise Exception(f'Error MAIL FROM: {recv2[:3]}')
 
+### ────────────RCPT TO─────────────────────────────────
+rcpt_to_cmd = f'RCPT TO:<{TO_ADDR}>\r\n'
+clientSocket.send(rcpt_to_cmd.encode())
+print('C:', rcpt_to_cmd, end='')
+recv3 = clientSocket.recv(1024).decode()
+print('S:', recv3, end='')
+if recv3[:3] != '250':
+    raise Exception(f'Error RCPT TO: {recv3[:3]}')
+
+### ────────────DATA────────────────────────────────────
+data_cmd = 'DATA\r\n'
+clientSocket.send(data_cmd.encode())
+print('C:', data_cmd, end='')
+recv4 = clientSocket.recv(1024).decode()
+print('S:', recv4, end='')
+if recv4[:3] != '354':
+    raise Exception(f'Error DATA: {recv4[:3]}')
+
+### ────────────MAIL INFO───────────────────────────────
+clientSocket.send(msg_header.encode())
+clientSocket.send(msg_body.encode())
+clientSocket.send(msg_end.encode())
+
+recv5 = clientSocket.recv(1024).decode()
+print('S:', recv5, end='')
+if recv5[:3] != '250':
+    raise Exception(f'Error MAIL INFO: {recv5[:3]}')
 
 
 # ─── 4. FINALIZAR CONEXIÓN SMTP ───────────────────────────────────────────────────────────────
-# COMPLETAR
-
+quit_cmd = 'QUIT\r\n'
+clientSocket.send(quit_cmd.encode())
+print('C:', quit_cmd, end='')
+recv6 = clientSocket.recv(1024).decode()
+print('S:', recv6, end='')
+if recv6[:3] != '221':
+    raise Exception(f'Error QUIT: {recv4[:3]}')
 
 # ─── 5. CERRAR CONEXIÓN TCP ───────────────────────────────────────────────────────
 # COMPLETAR: Cerrar el socket.
