@@ -1,6 +1,7 @@
 # Cliente SMTP básico — construcción manual del diálogo SMTP
 # RESTRICCIÓN: Prohibido usar la librería smtplib.
 
+import smtpd
 from socket import *
 
 # DATOS DE CONEXIÓN
@@ -24,7 +25,7 @@ msg_body   = (
     "Hola!\r\n"
     "Este es un mail enviado desde un cliente SMTP hecho con sockets.\r\n"
 )
-msg_end    = "."
+msg_end    = "\r\n.\r\n"
 
 
 # 1. CREAR SOCKET TCP Y CONECTAR AL SERVIDOR
@@ -103,4 +104,5 @@ if recv6[:3] != '221':
 
 # ─── 5. CERRAR CONEXIÓN TCP ───────────────────────────────────────────────────────
 # COMPLETAR: Cerrar el socket.
+clientSocket.close()
 print('\n[OK] Sesión SMTP finalizada correctamente.')
