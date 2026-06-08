@@ -9,13 +9,14 @@ import os
 # DATOS DE CONEXIÓN
 # COMPLETAR
 # Completar con el servidor de correo real (p.ej. smtp.dominio.edu.ar)
-MAIL_SERVER = 'smpt.gmail.com'
+MAIL_SERVER = 'smtp.gmail.com'
 SMTP_PORT   = 587
 
 # Cargar credenciales desde variables de entorno (más seguro)
-FROM_ADDR = os.environ.get('SMTP_USER', 'juanmartingoyeneche@gmail.com')
-PASSWORD  = os.environ.get('SMTP_PASS', 'tuviejaconmipingoseahoga!')   
-TO_ADDR   = 'juanmartingoyeneche@gmail.com'
+FROM_ADDR = os.environ.get('SMTP_USER', '')
+PASSWORD  = os.environ.get('SMTP_PASS', '')  
+TO_ADDR   = 'juanmgoyeneche@gmail.com'
+
 
 if not PASSWORD:
     raise EnvironmentError('Definir SMTP_PASS en variables de entorno.')
@@ -29,7 +30,7 @@ msg_header = (
 )
 msg_body   = (
     "Hola!\r\n"
-    "Este es un mail enviado desde un cliente SMTP hecho con sockets.\r\n"
+    "puto el que lee re puto el que sigue leyendo.\r\n"
 )
 msg_end = "\r\n.\r\n"
 
@@ -96,17 +97,34 @@ if recv3[:3] != '250':
 auth_login_cmd = 'AUTH LOGIN\r\n'
 tlsSocket.send(auth_login_cmd.encode())
 print('C:', auth_login_cmd, end='')
+
+# COMPLETAR: El servidor responde '334' solicitando el usuario en Base64.
 recv4 = tlsSocket.recv(1024).decode()
 print('S:', recv4, end='')
-if recv4[:3] != '250':
+if recv4[:3] != '334':
     raise Exception(f'Error AUTH LOGIN: {recv4[:3]}')
-# COMPLETAR: El servidor responde '334' solicitando el usuario en Base64.
-#       Codificar FROM_ADDR en Base64 y enviarlo.
 
+#       Codificar FROM_ADDR en Base64 y enviarlo.
+usuariob64_cmd = base64.b64encode(FROM_ADDR.encode()).decode() + '\r\n'
+tlsSocket.send(usuariob64_cmd.encode())
+print('C:',usuariob64_cmd, end='')
 
 # COMPLETAR: El servidor responde '334' solicitando la contraseña en Base64.
+recv5 = tlsSocket.recv(1024).decode()
+print('S:', recv5, end='')
+if recv5[:3] != '334':
+    raise Exception(f'Error USUARIO B64: {recv5[:3]}')
+
 #       Codificar PASSWORD en Base64 y enviarlo.
+contraseñab64_cmd = base64.b64encode(PASSWORD.encode()).decode() + '\r\n'
+tlsSocket.send(contraseñab64_cmd.encode())
+print('C:',contraseñab64_cmd, end='')
+
 # COMPLETAR: Verificar respuesta '235' (autenticación exitosa).
+recv6 = tlsSocket.recv(1024).decode()
+print('S:', recv6, end='')
+if recv6[:3] != '235':
+    raise Exception(f'Error PASSWORD B64: {recv6[:3]}')
 
 # Pista: base64.b64encode(string.encode()).decode() + '\r\n'
 
@@ -114,8 +132,51 @@ if recv4[:3] != '250':
 # ─── 7. COMPLETAR EL ENVIO DEL RESTO DE COMANDOS: MAIL FROM, RCPT TO, DATA, CUERPO, QUIT ───────────────────
 # COMPLETAR: Completar igual que en SMTPClient_base.py,
 #       pero usando tlsSocket en lugar de clientSocket.
+mail_from_cmd = f'MAIL FROM:<{FROM_ADDR}>\r\n'  
+tlsSocket.send(mail_from_cmd.encode())
+print('C:', mail_from_cmd, end='')
+recv7 = tlsSocket.recv(1024).decode()
+print('S:', recv7, end='')
+if recv7[:3] != '250':
+    raise Exception(f'Error MAIL FROM: {recv7[:3]}')
 
+### ────────────RCPT TO─────────────────────────────────
+rcpt_to_cmd = f'RCPT TO:<{TO_ADDR}>\r\n'
+tlsSocket.send(rcpt_to_cmd.encode())
+print('C:', rcpt_to_cmd, end='')
+recv8 = tlsSocket.recv(1024).decode()
+print('S:', recv8, end='')
+if recv8[:3] != '250':
+    raise Exception(f'Error RCPT TO: {recv8[:3]}')
+
+### ────────────DATA────────────────────────────────────
+data_cmd = 'DATA\r\n'
+tlsSocket.send(data_cmd.encode())
+print('C:', data_cmd, end='')
+recv9 = tlsSocket.recv(1024).decode()
+print('S:', recv9, end='')
+if recv9[:3] != '354':
+    raise Exception(f'Error DATA: {recv9[:3]}')
+
+### ────────────MAIL INFO───────────────────────────────
+mail_info_cmd = msg_header + msg_body + msg_end
+tlsSocket.send(mail_info_cmd.encode())
+print('C:', mail_info_cmd, end='')
+recv10 = tlsSocket.recv(1024).decode()
+print('S:', recv10, end='')
+if recv10[:3] != '250':
+    raise Exception(f'Error MAIL INFO: {recv10[:3]}')
+
+# ─── 4. FINALIZAR CONEXIÓN SMTP ───────────────────────────────────────────────────
+quit_cmd = 'QUIT\r\n'
+tlsSocket.send(quit_cmd.encode())
+print('C:', quit_cmd, end='')
+recv11 = tlsSocket.recv(1024).decode()
+print('S:', recv11, end='')
+if recv11[:3] != '221':
+    raise Exception(f'Error QUIT: {recv11[:3]}')
 
 # ─── 8. CERRAR CONEXIÓN TLS ───────────────────────────────────────────────────────
 # COMPLETAR: Cerrar el socket.
+tlsSocket.close()
 print('\n[OK] Correo enviado con cifrado TLS.')
