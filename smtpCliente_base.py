@@ -1,7 +1,6 @@
 # Cliente SMTP básico — construcción manual del diálogo SMTP
 # RESTRICCIÓN: Prohibido usar la librería smtplib.
 
-import smtpd
 from socket import *
 
 # DATOS DE CONEXIÓN
