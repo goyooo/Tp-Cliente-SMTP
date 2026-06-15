@@ -181,6 +181,6 @@ if recv11[:3] != '221':
     raise Exception(f'Error QUIT: {recv11[:3]}')
 
 # ─── 8. CERRAR CONEXIÓN TLS ───────────────────────────────────────────────────────
-# COMPLETAR: Cerrar el socket.
+
 tlsSocket.close()
 print('\n[OK] Correo enviado con cifrado TLS.')
