@@ -4,8 +4,7 @@
 from socket import *
 
 # DATOS DE CONEXIÓN
-# COMPLETAR
-# Completar con el servidor de correo real (p.ej. smtp.dominio.edu.ar) o 'localhost' para pruebas locales.
+
 MAIL_SERVER = 'localhost'
 SMTP_PORT   = 1025 #Elegimos este puerto de escucha para el servidor de prueba
 
