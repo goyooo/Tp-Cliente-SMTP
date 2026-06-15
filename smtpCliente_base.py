@@ -113,7 +113,7 @@ print('C:', quit_cmd, end='')
 recv6 = clientSocket.recv(1024).decode()
 print('S:', recv6, end='')
 if recv6[:3] != '221':
-    raise Exception(f'Error QUIT: {recv4[:3]}')
+    raise Exception(f'Error QUIT: {recv6[:3]}')
 
 # ─── 5. CERRAR CONEXIÓN TCP ───────────────────────────────────────────────────────
 # Cerrar el socket.
