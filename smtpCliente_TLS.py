@@ -7,17 +7,21 @@ import base64
 import os
 
 # DATOS DE CONEXIÓN
-# COMPLETAR
-# Completar con el servidor de correo real (p.ej. smtp.dominio.edu.ar)
+
+# Servidor de correo
 MAIL_SERVER = 'smtp.gmail.com'
+
+# Puerto con soporte STARTTLS
 SMTP_PORT   = 587
 
 # Cargar credenciales desde variables de entorno (más seguro)
 FROM_ADDR = os.environ.get('SMTP_USER', '')
 PASSWORD  = os.environ.get('SMTP_PASS', '')  
+
+# Destinatario
 TO_ADDR   = 'juanmgoyeneche@gmail.com'
 
-
+# Verificar que la contraseña haya sido definida.
 if not PASSWORD:
     raise EnvironmentError('Definir SMTP_PASS en variables de entorno.')
 
@@ -28,6 +32,8 @@ msg_header = (
     "Subject: TP Redes SMTP\r\n"
     "\r\n"
 )
+
+# Contenido del mensaje
 msg_body   = (
     "Hola!\r\n"
     "Con el cifrado este mensaje no puede ser interceptado.\r\n"
@@ -37,6 +43,7 @@ msg_end = "\r\n.\r\n"
 # 1. CREAR SOCKET TCP Y CONECTAR AL SERVIDOR
 clientSocket = socket(AF_INET, SOCK_STREAM) 
 
+# Conectarse al servidor SMTP
 clientSocket.connect((MAIL_SERVER, SMTP_PORT))
 
 # Leer respuesta de bienvenida — debe comenzar con '220'
@@ -48,6 +55,7 @@ if recv[:3] != '220':
 # ─── 2. EHLO (Extended HELO) ────────────────────────────────────────────
 # Se usa EHLO (no HELO) para negociar extensiones como STARTTLS.
 # COMPLETAR: Enviar 'EHLO localhost\r\n' y leer la respuesta ('250').
+
 ehlo_cmd = 'EHLO localhost\r\n'
 clientSocket.send(ehlo_cmd.encode())
 print('C:', ehlo_cmd, end='')
@@ -58,7 +66,7 @@ if recv1[:3] != '250':
 
 # ─── 3. STARTTLS ─────────────────────────────────────────────────────────
 # Solicitar inicio de sesión cifrada ANTES de enviar credenciales.
-# COMPLETAR: Enviar el comando 'STARTTLS\r\n' y leer la respuesta ('220 Ready to start TLS').
+
 starttls_cmd = 'STARTTLS\r\n'
 clientSocket.send(starttls_cmd.encode())
 print('C:', starttls_cmd, end='')
@@ -68,12 +76,10 @@ if recv2[:3] != '220':
     raise Exception(f'Error STARTTLS: {recv2[:3]}')
 
 # ─── 4. ENVOLVER SOCKET CON SSL/TLS ─────────────────────────────────────
-# COMPLETAR: Crear un ssl.SSLContext con protocolo TLS cliente.
-# COMPLETAR: Usar context.wrap_socket() sobre clientSocket,
-#       indicando server_hostname=MAIL_SERVER.
-#       Asignar el resultado a tlsSocket.
+
 context = ssl.create_default_context()
 
+# Envolver el socket TCP original con TLS.
 tlsSocket = context.wrap_socket(
     clientSocket,
     server_hostname=MAIL_SERVER
@@ -81,7 +87,7 @@ tlsSocket = context.wrap_socket(
 
 # ─── 5. EHLO NUEVAMENTE (sobre canal cifrado) ───────────────────────────
 # RFC 3207 exige re-enviar EHLO tras establecer TLS.
-# COMPLETAR: Enviar EHLO nuevamente usando tlsSocket.
+
 ehlo_cmd = 'EHLO localhost\r\n'
 tlsSocket.send(ehlo_cmd.encode())
 print('C:', ehlo_cmd, end='')
@@ -93,12 +99,11 @@ if recv3[:3] != '250':
 
 # ─── 6. AUTH LOGIN ──────────────────────────────────────────────────────
 # Autenticación mediante usuario y contraseña codificados en Base64.
-# COMPLETAR: Enviar 'AUTH LOGIN\r\n' por tlsSocket.
+
 auth_login_cmd = 'AUTH LOGIN\r\n'
 tlsSocket.send(auth_login_cmd.encode())
 print('C:', auth_login_cmd, end='')
 
-# COMPLETAR: El servidor responde '334' solicitando el usuario en Base64.
 recv4 = tlsSocket.recv(1024).decode()
 print('S:', recv4, end='')
 if recv4[:3] != '334':
@@ -120,18 +125,17 @@ contraseñab64_cmd = base64.b64encode(PASSWORD.encode()).decode() + '\r\n'
 tlsSocket.send(contraseñab64_cmd.encode())
 print('C:',contraseñab64_cmd, end='')
 
-# COMPLETAR: Verificar respuesta '235' (autenticación exitosa).
+
 recv6 = tlsSocket.recv(1024).decode()
 print('S:', recv6, end='')
 if recv6[:3] != '235':
     raise Exception(f'Error PASSWORD B64: {recv6[:3]}')
 
-# Pista: base64.b64encode(string.encode()).decode() + '\r\n'
+
 
 
 # ─── 7. COMPLETAR EL ENVIO DEL RESTO DE COMANDOS: MAIL FROM, RCPT TO, DATA, CUERPO, QUIT ───────────────────
-# COMPLETAR: Completar igual que en SMTPClient_base.py,
-#       pero usando tlsSocket en lugar de clientSocket.
+
 mail_from_cmd = f'MAIL FROM:<{FROM_ADDR}>\r\n'  
 tlsSocket.send(mail_from_cmd.encode())
 print('C:', mail_from_cmd, end='')
