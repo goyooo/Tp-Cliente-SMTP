@@ -40,7 +40,7 @@ msg_body   = (
 )
 msg_end = "\r\n.\r\n"
 
-# 1. CREAR SOCKET TCP Y CONECTAR AL SERVIDOR
+#  CREAR SOCKET TCP Y CONECTAR AL SERVIDOR
 clientSocket = socket(AF_INET, SOCK_STREAM) 
 
 # Conectarse al servidor SMTP
@@ -52,7 +52,7 @@ print('S:', recv, end='')
 if recv[:3] != '220':
     raise Exception(f'Banner inesperado: {recv}')
 
-# ─── 2. EHLO (Extended HELO) ────────────────────────────────────────────
+# ───  EHLO (Extended HELO) ────────────────────────────────────────────
 # Se usa EHLO (no HELO) para negociar extensiones como STARTTLS.
 # COMPLETAR: Enviar 'EHLO localhost\r\n' y leer la respuesta ('250').
 
@@ -64,7 +64,7 @@ print('S:', recv1, end='')
 if recv1[:3] != '250':
     raise Exception(f'Error EHLO: {recv1[:3]}')
 
-# ─── 3. STARTTLS ─────────────────────────────────────────────────────────
+# ───  STARTTLS ─────────────────────────────────────────────────────────
 # Solicitar inicio de sesión cifrada ANTES de enviar credenciales.
 
 starttls_cmd = 'STARTTLS\r\n'
@@ -75,7 +75,7 @@ print('S:', recv2, end='')
 if recv2[:3] != '220':
     raise Exception(f'Error STARTTLS: {recv2[:3]}')
 
-# ─── 4. ENVOLVER SOCKET CON SSL/TLS ─────────────────────────────────────
+# ───  ENVOLVER SOCKET CON SSL/TLS ─────────────────────────────────────
 
 context = ssl.create_default_context()
 
@@ -85,7 +85,7 @@ tlsSocket = context.wrap_socket(
     server_hostname=MAIL_SERVER
 )
 
-# ─── 5. EHLO NUEVAMENTE (sobre canal cifrado) ───────────────────────────
+# ───  EHLO NUEVAMENTE (sobre canal cifrado) ───────────────────────────
 # RFC 3207 exige re-enviar EHLO tras establecer TLS.
 
 ehlo_cmd = 'EHLO localhost\r\n'
@@ -97,7 +97,7 @@ if recv3[:3] != '250':
     raise Exception(f'Error cifrado: {recv3[:3]}')
 
 
-# ─── 6. AUTH LOGIN ──────────────────────────────────────────────────────
+# ───  AUTH LOGIN ──────────────────────────────────────────────────────
 # Autenticación mediante usuario y contraseña codificados en Base64.
 
 auth_login_cmd = 'AUTH LOGIN\r\n'
@@ -134,7 +134,7 @@ if recv6[:3] != '235':
 
 
 
-# ─── 7. COMPLETAR EL ENVIO DEL RESTO DE COMANDOS: MAIL FROM, RCPT TO, DATA, CUERPO, QUIT ───────────────────
+# ───  COMPLETAR EL ENVIO DEL RESTO DE COMANDOS: MAIL FROM, RCPT TO, DATA, CUERPO, QUIT ───────────────────
 
 mail_from_cmd = f'MAIL FROM:<{FROM_ADDR}>\r\n'  
 tlsSocket.send(mail_from_cmd.encode())
@@ -171,7 +171,7 @@ print('S:', recv10, end='')
 if recv10[:3] != '250':
     raise Exception(f'Error MAIL INFO: {recv10[:3]}')
 
-# ─── 4. FINALIZAR CONEXIÓN SMTP ───────────────────────────────────────────────────
+# ───  FINALIZAR CONEXIÓN SMTP ───────────────────────────────────────────────────
 quit_cmd = 'QUIT\r\n'
 tlsSocket.send(quit_cmd.encode())
 print('C:', quit_cmd, end='')
@@ -180,7 +180,7 @@ print('S:', recv11, end='')
 if recv11[:3] != '221':
     raise Exception(f'Error QUIT: {recv11[:3]}')
 
-# ─── 8. CERRAR CONEXIÓN TLS ───────────────────────────────────────────────────────
+# ───  CERRAR CONEXIÓN TLS ───────────────────────────────────────────────────────
 
 tlsSocket.close()
 print('\n[OK] Correo enviado con cifrado TLS.')
