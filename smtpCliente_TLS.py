@@ -30,7 +30,7 @@ msg_header = (
 )
 msg_body   = (
     "Hola!\r\n"
-    "puto el que lee re puto el que sigue leyendo.\r\n"
+    "Con el cifrado este mensaje no puede ser interceptado.\r\n"
 )
 msg_end = "\r\n.\r\n"
 
